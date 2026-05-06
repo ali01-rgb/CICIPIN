@@ -147,13 +147,19 @@ def compute_open_status(restaurant):
         return restaurant
 
     try:
+        # Use regex to find time patterns like 8:00-22:00 or 08:00-22:00
+        import re
+        match = re.search(r'(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})', opening_hours)
+        if not match:
+            restaurant["is_open"] = None
+            return restaurant
 
-        open_time, close_time = opening_hours.split("-")
+        open_hour, open_min, close_hour, close_min = map(int, match.groups())
 
         now = datetime.now().time()
 
-        open_time = datetime.strptime(open_time.strip(), "%H:%M").time()
-        close_time = datetime.strptime(close_time.strip(), "%H:%M").time()
+        open_time = datetime.time(open_hour, open_min)
+        close_time = datetime.time(close_hour, close_min)
 
         restaurant["is_open"] = open_time <= now <= close_time
 
