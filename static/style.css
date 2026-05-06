@@ -1061,6 +1061,7 @@ main {
     display: block;
     height: 100%;
     background: #F59E0B;
+    width: var(--rating-width, 0%);
 }
 
 .rating-count-value {

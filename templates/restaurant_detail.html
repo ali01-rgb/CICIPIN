@@ -39,8 +39,9 @@
                 <h2><span class="category-icon">🍽️</span> Detail Restoran</h2>
                 <p class="about-text"><strong>Kategori:</strong> {{ restaurant['category'] }}</p>
                 <p class="about-text"><strong>Alamat:</strong> {{ restaurant['address'] }}</p>
-                {% if restaurant.get('opening_hours') %}
-                <p class="about-text"><strong>Jam Buka:</strong> {{ restaurant['opening_hours'] }}</p>
+                {% set opening_hours = restaurant.get('opening_hours', '')|trim %}
+                {% if opening_hours %}
+                <p class="about-text"><strong>Jam Buka:</strong> {{ opening_hours }}</p>
                 {% endif %}
 
                 {% if restaurant.average_rating is not none %}
@@ -54,10 +55,10 @@
                     </div>
                     <div class="rating-breakdown">
                         {% for star in range(5,0,-1) %}
-                        <div class="rating-row">
+                        <div class="rating-row" style="--rating-width: {{ rating_percentages[star] }}%;">
                             <span class="rating-star-row">{{ star }} <span class="star-icon">★</span></span>
                             <div class="rating-bar">
-                                <span class="rating-fill" style="width: {{ (rating_counts[star] / total_reviews * 100) if total_reviews else 0 }}%;"></span>
+                                <span class="rating-fill"></span>
                             </div>
                             <span class="rating-count-value">{{ rating_counts[star] }}</span>
                         </div>

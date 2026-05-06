@@ -11,7 +11,7 @@ from pymongo import MongoClient
 from bson.objectid import ObjectId
 from werkzeug.utils import secure_filename
 from PIL import Image
-from datetime import datetime
+from datetime import datetime, time
 import math
 import re
 
@@ -166,10 +166,11 @@ def compute_open_status(restaurant):
         return restaurant
 
     try:
-        # Use regex to find time patterns like 8:00-22:00 or 08:00-22:00
+        # Use regex to find time patterns like 8:00-22:00 or 08:00-22:00, also handle en dash
         import re
-        match = re.search(r'(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})', opening_hours)
+        match = re.search(r'(\d{1,2}):(\d{2})\s*[-–]\s*(\d{1,2}):(\d{2})', opening_hours)
         if not match:
+            print(f"NO MATCH for {opening_hours}")
             restaurant["is_open"] = None
             return restaurant
 
@@ -177,10 +178,19 @@ def compute_open_status(restaurant):
 
         now = datetime.now().time()
 
-        open_time = datetime.time(open_hour, open_min)
-        close_time = datetime.time(close_hour, close_min)
+        open_time = time(open_hour, open_min)
+        close_time = time(close_hour, close_min)
 
-        restaurant["is_open"] = open_time <= now <= close_time
+        # Handle case ketika close time adalah hari berikutnya (e.g., 17:00-01:00)
+        if close_time < open_time:
+            # Restoran buka melampaui tengah malam
+            is_open = now >= open_time or now < close_time
+        else:
+            # Normal case
+            is_open = open_time <= now <= close_time
+        
+        print(f"{opening_hours}: open={open_time}, close={close_time}, now={now}, is_open={is_open}")
+        restaurant["is_open"] = is_open
 
     except:
         restaurant["is_open"] = None
@@ -347,7 +357,7 @@ def add_restaurant():
             latitude = float(request.form.get('latitude'))
             longitude = float(request.form.get('longitude'))
 
-            opening_hours = request.form.get('opening_hours')
+            opening_hours = request.form.get('opening_hours', '').strip() or None
             price_range = request.form.get('price_range')
 
             image_url = None
@@ -403,7 +413,7 @@ def edit_restaurant(restaurant_id):
         name = request.form['name']
         category = request.form['category']
         address = request.form['address']
-        opening_hours = request.form.get('opening_hours')
+        opening_hours = request.form.get('opening_hours', '').strip() or None
         latitude = float(request.form['latitude']) if request.form.get('latitude') else None
         longitude = float(request.form['longitude']) if request.form.get('longitude') else None
         price_range = request.form['price_range']
@@ -534,10 +544,19 @@ def restaurant_detail(restaurant_id):
             if 1 <= star_value <= 5:
                 rating_counts[star_value] += 1
 
+        # Calculate percentages for rating breakdown
+        rating_percentages = {}
+        for star in range(1, 6):
+            if total_reviews > 0:
+                rating_percentages[star] = round((rating_counts[star] / total_reviews * 100), 1)
+            else:
+                rating_percentages[star] = 0
+
         return render_template(
             'restaurant_detail.html',
             restaurant=restaurant,
             rating_counts=rating_counts,
+            rating_percentages=rating_percentages,
             total_reviews=total_reviews,
             username=session.get('username'),
             is_authenticated="user_id" in session
