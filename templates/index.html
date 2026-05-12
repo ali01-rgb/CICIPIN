@@ -7,50 +7,6 @@
     <title>Cicipin - Review Makanan Ala Kucing</title>
     <link rel="icon" type="image/jpg" href="{{ url_for('static', filename='favicon.jpg') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    
-    <style>
-        .scroll-bottom-btn {
-            position: fixed !important;
-            bottom: 30px !important;
-            left: 50% !important;
-            transform: translateX(-50%) !important;
-            width: 52px !important;
-            height: 52px !important;
-            border-radius: 50% !important;
-            background-color: #2563eb !important;
-            color: white !important;
-            border: none !important;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.3) !important;
-            cursor: pointer !important;
-            z-index: 99999 !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            transition: all 0.3s ease !important;
-            opacity: 1 !important;
-            visibility: visible !important;
-        }
-
-        .scroll-bottom-btn:hover {
-            background-color: #1d4ed8 !important;
-            transform: translateX(-50%) translateY(-5px) !important;
-        }
-
-        .scroll-bottom-btn svg {
-            width: 26px !important;
-            height: 26px !important;
-            fill: none !important;
-            stroke: white !important;
-            stroke-width: 2 !important;
-        }
-
-        /* Class untuk sembunyi kalau emang udah di bawah banget */
-        .scroll-bottom-btn.hidden {
-            opacity: 0 !important;
-            visibility: hidden !important;
-            pointer-events: none !important;
-        }
-    </style>
 </head>
 
 <body>
@@ -117,13 +73,22 @@
 
         <section class="filter-section">
             <div class="category-pill-grid">
-                <a href="{{ url_for('index', category='Indonesia') }}" class="category-pill {% if request.args.get('category') == 'Indonesia' %}active{% endif %}">Indonesia</a>
-                <a href="{{ url_for('index', category='Jepang') }}" class="category-pill {% if request.args.get('category') == 'Jepang' %}active{% endif %}">Jepang</a>
-                <a href="{{ url_for('index', category='Italia') }}" class="category-pill {% if request.args.get('category') == 'Italia' %}active{% endif %}">Italia</a>
-                <a href="{{ url_for('index', category='Chinese') }}" class="category-pill {% if request.args.get('category') == 'Chinese' %}active{% endif %}">Chinese</a>
-                <a href="{{ url_for('index', category='Seafood') }}" class="category-pill {% if request.args.get('category') == 'Seafood' %}active{% endif %}">Seafood</a>
-                <a href="{{ url_for('index', category='Kafe') }}" class="category-pill {% if request.args.get('category') == 'Kafe' %}active{% endif %}">Kafe</a>
-                <a href="{{ url_for('index', category='Street Food') }}" class="category-pill {% if request.args.get('category') == 'Street Food' %}active{% endif %}">Street Food</a>
+                <a href="{{ url_for('index', category='semua') }}"
+                    class="category-pill {% if request.args.get('category', '') in ['', 'semua'] %}active{% endif %}">Semua</a>
+                <a href="{{ url_for('index', category='Indonesia') }}"
+                    class="category-pill {% if request.args.get('category') == 'Indonesia' %}active{% endif %}">Indonesia</a>
+                <a href="{{ url_for('index', category='Jepang') }}"
+                    class="category-pill {% if request.args.get('category') == 'Jepang' %}active{% endif %}">Jepang</a>
+                <a href="{{ url_for('index', category='Italia') }}"
+                    class="category-pill {% if request.args.get('category') == 'Italia' %}active{% endif %}">Italia</a>
+                <a href="{{ url_for('index', category='Chinese') }}"
+                    class="category-pill {% if request.args.get('category') == 'Chinese' %}active{% endif %}">Chinese</a>
+                <a href="{{ url_for('index', category='Seafood') }}"
+                    class="category-pill {% if request.args.get('category') == 'Seafood' %}active{% endif %}">Seafood</a>
+                <a href="{{ url_for('index', category='Kafe') }}"
+                    class="category-pill {% if request.args.get('category') == 'Kafe' %}active{% endif %}">Kafe</a>
+                <a href="{{ url_for('index', category='Street Food') }}"
+                    class="category-pill {% if request.args.get('category') == 'Street Food' %}active{% endif %}">Street Food</a>
                 {% if is_authenticated %}
                 <a href="{{ url_for('wishlist') }}" class="category-pill">To-Go List</a>
                 {% endif %}
@@ -162,7 +127,8 @@
                         </button>
 
                         {% if restaurant['image_url'] %}
-                        <img src="{{ restaurant['image_url'] }}" class="restaurant-image" alt="{{ restaurant['name'] }}">
+                        <img src="{{ restaurant['image_url'] }}" alt="{{ restaurant['name'] }}"
+                            class="restaurant-image">
                         {% else %}
                         <div class="image-placeholder">No Image</div>
                         {% endif %}
@@ -178,15 +144,22 @@
 
                     <div class="card-info">
                         <div class="card-top-row">
-                            <span class="tag-pill">Unggulan</span>
+                            <div>
+                                <span class="tag-pill">Unggulan</span>
+                            </div>
                             <span class="review-count-small">{{ restaurant['reviews'] | length }} ulasan</span>
                         </div>
+
                         <h4>{{ restaurant['name'] }}</h4>
                         <p class="card-subtitle">{{ restaurant.get('category','N/A') }} · {{ restaurant['address'] }}</p>
+
                         <div class="card-meta-row">
                             <span class="rating-badge">⭐ {{ restaurant.average_rating or '-' }}</span>
                             {% if restaurant.get('price_range') %}
                             <span class="price-tag">Rp {{ restaurant.get('price_range') }}</span>
+                            {% endif %}
+                            {% if restaurant.get('distance_str') %}
+                            <span class="distance-tag">{{ restaurant.distance_str }}</span>
                             {% endif %}
                         </div>
                         <div class="card-buttons">
@@ -204,8 +177,9 @@
             </div>
             {% else %}
             <div class="empty-state">
-                <p style="font-size:48px;">😸</p>
-                <h3>Tidak ada restoran yang sesuai.</h3>
+                <p style="font-size:48px;margin-bottom:10px;">😸</p>
+                <h3>Tidak ada restoran yang sesuai dengan pencarian.</h3>
+                <p>Silakan coba kata kunci atau kategori lain untuk menemukan tempat makan yang cocok.</p>
             </div>
             {% endif %}
         </section>
@@ -219,59 +193,63 @@
         {% endif %}
     </main>
 
-    <button id="scrollToBottomBtn" class="scroll-bottom-btn" title="Ke Paling Bawah">
-        <svg viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="10"></circle>
-            <polyline points="8 12 12 16 16 12"></polyline>
-            <line x1="12" y1="8" x2="12" y2="16"></line>
-        </svg>
-    </button>
-
     <script src="{{ url_for('static', filename='script.js') }}"></script>
     <script>
         function applySort(sortValue) {
             const url = new URL(window.location.href);
+            if (sortValue === 'jarak') {
+                requestLocationForDistance(url);
+                return;
+            }
             url.searchParams.set('sort_by', sortValue);
+            url.searchParams.delete('user_lat');
+            url.searchParams.delete('user_lon');
             window.location.href = url.toString();
         }
 
+        function requestLocationForDistance(url = new URL(window.location.href)) {
+            if (!navigator.geolocation) {
+                alert('Geolocation tidak didukung di browser Anda.');
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    url.searchParams.set('sort_by', 'jarak');
+                    url.searchParams.set('user_lat', position.coords.latitude);
+                    url.searchParams.set('user_lon', position.coords.longitude);
+                    window.location.href = url.toString();
+                },
+                function(error) {
+                    if (error.code === error.PERMISSION_DENIED) {
+                        alert('Akses lokasi ditolak. Aktifkan lokasi agar bisa mencari restoran terdekat.');
+                    } else {
+                        alert('Tidak dapat mengambil lokasi Anda. Silakan coba lagi.');
+                    }
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 60000
+                }
+            );
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
-            // 1. Wishlist Buttons
+            const url = new URL(window.location.href);
+            const sortBy = url.searchParams.get('sort_by');
+            const userLat = url.searchParams.get('user_lat');
+            const userLon = url.searchParams.get('user_lon');
+
+            if (sortBy === 'jarak' && (!userLat || !userLon)) {
+                requestLocationForDistance(url);
+            }
+
             document.querySelectorAll('.wishlist-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     toggleWishlist(this.dataset.id, this);
                 });
             });
-
-            // 2. Scroll to Bottom Logic
-            const scrollBtn = document.getElementById('scrollToBottomBtn');
-            if (scrollBtn) {
-                scrollBtn.addEventListener('click', function() {
-                    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-                });
-
-                window.addEventListener('scroll', function() {
-                    const isAtBottom = (window.innerHeight + window.scrollY) >= document.body.scrollHeight - 100;
-                    const canScroll = document.body.scrollHeight > window.innerHeight;
-                    
-                    if (isAtBottom || !canScroll) {
-                        scrollBtn.classList.add('hidden');
-                    } else {
-                        scrollBtn.classList.remove('hidden');
-                    }
-                });
-            }
-
-            // 3. Restore Scroll Position
-            const savedPos = sessionStorage.getItem('cicipinScrollPos');
-            if (savedPos) {
-                window.scrollTo({ top: parseInt(savedPos), behavior: 'auto' });
-                sessionStorage.removeItem('cicipinScrollPos');
-            }
-        });
-
-        window.addEventListener('beforeunload', function() {
-            sessionStorage.setItem('cicipinScrollPos', window.scrollY);
         });
 
         async function toggleWishlist(restaurantId, btn) {
@@ -286,8 +264,11 @@
                     btn.innerText = data.is_saved ? '❤️' : '🤍';
                     btn.classList.toggle('saved', data.is_saved);
                 }
-            } catch (e) { console.error(e); }
+            } catch (error) {
+                console.error('Error:', error);
+            }
         }
     </script>
 </body>
+
 </html>

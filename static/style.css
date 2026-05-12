@@ -1343,39 +1343,6 @@ main {
     margin-bottom: 14px;
 }
 
-.drop-zone {
-    border: 2px dashed var(--border);
-    border-radius: 18px;
-    padding: 18px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    position: relative;
-    transition: border-color 0.2s ease, background-color 0.2s ease;
-    background: var(--surface-soft);
-    cursor: pointer;
-}
-
-.drop-zone:hover,
-.drop-zone.active {
-    border-color: var(--primary);
-    background: rgba(37, 99, 235, 0.06);
-}
-
-.drop-zone-text {
-    color: var(--text-secondary);
-    font-size: 0.95rem;
-}
-
-.drop-zone input[type="file"] {
-    width: 100%;
-    border: 1px solid var(--border);
-    padding: 12px 14px;
-    border-radius: 14px;
-    background: var(--surface);
-    cursor: pointer;
-}
-
 .form-group label,
 .auth-card label {
     display: block;
