@@ -29,6 +29,52 @@ UPLOAD_FOLDER = "/tmp"
 app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-cicipin-2024')
 
 
+def extract_city_from_address(address):
+    """
+    Extract and normalize city name from address string.
+    Supports formats like: "Kota Semarang", "Semarang City", "Semarang 50181", etc.
+    """
+    if not address:
+        return None
+    
+    # Split by comma to analyze each part
+    parts = [p.strip() for p in address.split(',')]
+    
+    # Priority 1: Look for "Kota xxx" or "Kabupaten xxx" in any part
+    for part in parts:
+        match = re.search(r'^(?:Kota|Kabupaten)\s+(.+)$', part, re.IGNORECASE)
+        if match:
+            city_name = match.group(1).strip()
+            city_name = re.sub(r'\s+(?:City|city)$', '', city_name).strip()
+            return city_name
+    
+    # Priority 2: Look for "xxx City" in any part
+    for part in parts:
+        match = re.search(r'^(.+?)\s+(?:City|city)$', part)
+        if match:
+            return match.group(1).strip()
+    
+    # Priority 3: Check last part for "CityName PostalCode" pattern
+    if parts:
+        last_part = parts[-1].strip()
+        # Match pattern like "Semarang 50276"
+        match = re.search(r'^(\D+?)\s+\d', last_part)
+        if match:
+            return match.group(1).strip()
+    
+    # Priority 4: Check second-to-last part if it doesn't look like postal code
+    if len(parts) >= 2:
+        second_last = parts[-2].strip()
+        # Skip if it looks like province name
+        province_keywords = ['java', 'jawa', 'sumatera', 'sulawesi', 'kalimantan', 'papua', 'riau', 'bengkulu', 'jambi', 'aceh', 'banten', 'yogyakarta', 'nusa', 'maluku', 'timur', 'barat']
+        if not any(word in second_last.lower() for word in province_keywords):
+            city_name = re.sub(r'^(?:Kec|Kota|Kabupaten|Kelurahan)\s+', '', second_last, flags=re.IGNORECASE).strip()
+            if city_name and not city_name[0].isdigit():
+                return city_name
+    
+    return None
+
+
 
 
 
@@ -284,18 +330,19 @@ def index():
 
             city_agg = list(db.restaurants.aggregate([
                 {"$match": {"address": {"$exists": True, "$ne": ""}}},
-                {"$project": {"address_parts": {"$split": ["$address", ","]}, "address_len": {"$size": {"$split": ["$address", ","]}}}},
-                {"$project": {"city": {
-                    "$cond": [
-                        {"$gte": ["$address_len", 2]},
-                        {"$trim": {"input": {"$arrayElemAt": [{"$split": ["$address", ","]}, -2]}}},
-                        {"$trim": {"input": {"$arrayElemAt": [{"$split": ["$address", ","]}, -1]}}}
-                    ]
-                }}},
-                {"$group": {"_id": "$city"}},
-                {"$count": "city_count"}
+                {"$project": {"address": 1}}
             ]))
-            city_count = city_agg[0]["city_count"] if city_agg else 0
+            
+            # Extract unique cities using Python function with normalization
+            unique_cities = set()
+            for restaurant in city_agg:
+                city = extract_city_from_address(restaurant.get("address", ""))
+                if city:
+                    # Normalize to lowercase for deduplication
+                    city_normalized = city.lower().strip()
+                    unique_cities.add(city_normalized)
+            
+            city_count = len(unique_cities)
         except Exception as exc:
             app.logger.warning("Failed to compute dashboard stats: %s", exc)
 
