@@ -64,3 +64,4 @@ for addr in test_addresses:
     print(f"City: {city}")
     print(f"City (lower): {city.lower() if city else None}")
     print("---")
+

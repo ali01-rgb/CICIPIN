@@ -12,3 +12,5 @@ for r in restaurants:
     print(f"Restaurant: {r.get('name', 'N/A')}")
     print(f"Address: {r.get('address', 'N/A')}")
     print('---')
+
+
